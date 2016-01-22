@@ -54,15 +54,13 @@ PbmImage* pbm_image_load_from_stream(FILE* stream, int* error){
 	//Removes LF-Char
 	getc(stream);
 
-	//Reads the Comment
+	//Reads the Comment (only working with one comment line)
 	char comment [80];
-	do {
-		comment[0] = ' ';
+	//do{
 		fscanf(stream, "%[#:.0-9a-zA-Z ]", comment);
 		//Removes the LF-Char
 		getc(stream);
-	} while (comment[0] == '#');
-
+	//}while(lineStartsWith#);
 
 	//Reads the width and height
 	fscanf(stream, "%d %d", &(*img).width, &(*img).height);
