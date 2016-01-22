@@ -29,6 +29,11 @@ int main(int argc, char const *argv[])
 		return error;
 	}
 
+	printf("Type: %s\n", (*pbmimage).type);
+	printf("Height: %d\n", (*pbmimage).height);
+	printf("Width: %d\n", (*pbmimage).width);
+	printf("Data: %s\n", (*pbmimage).data);
+
 	//Flip image
 	error = pbm_image_flip(pbmimage);
 	if(error != 0){

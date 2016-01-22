@@ -13,15 +13,8 @@ void pbm_image_free(PbmImage* img){
 }
 
 PbmImage* pbm_image_load_from_stream(FILE* stream, int* error){
-	
-	//Allocate memory to save the image
-	PbmImage* img = malloc(sizeof(PbmImage));
-	if (img == NULL){
-		*error = RET_OUT_OF_MEMORY;
-		return NULL;
-	}
 
-	//Check if file is empty / doesn't exist
+	//Checks if file is empty / doesn't exist
 	if (stream == NULL){
 		printf("File is empty\n");
 		fclose(stream);
@@ -30,10 +23,18 @@ PbmImage* pbm_image_load_from_stream(FILE* stream, int* error){
 	} 
 
 	printf("File successfully read.\n");
+
+
+	//Allocates memory to save the image
+	PbmImage* img = malloc(sizeof(PbmImage));
+	if (img == NULL){
+		*error = RET_OUT_OF_MEMORY;
+		return NULL;
+	}
+
+
+	//checks if format is P5
 	printf("Checking format (has to be P5 PGM Image).\n");
-
-
-	//check if format is P5
 	fscanf(stream, "%[0-9a-zA-Z]", (*img).type);
 
 #ifdef DEBUG
@@ -48,22 +49,24 @@ PbmImage* pbm_image_load_from_stream(FILE* stream, int* error){
 		printf("Format okay.\n");
 	}
 
+
+
 	//Removes LF-Char
 	getc(stream);
 
 	//Reads the Comment
 	char comment [80];
-	fscanf(stream, "%[#:.0-9a-zA-Z ]", comment);
-	//Removes the LF-Char
-	getc(stream);
+	//do {
+		fscanf(stream, "%[#:.0-9a-zA-Z ]", comment);
+		//Removes the LF-Char
+		getc(stream);
+	//} while (lineStartsWith#)
+
 
 	//Reads the width and height
 	fscanf(stream, "%d %d", &(*img).width, &(*img).height);
-
-	//Reads the colordepth
-	int depth = 0;
-	fscanf(stream, "%d", &depth);
-
+	//Removes LF-Char
+	getc(stream);
 
 #ifdef DEBUG
 	printf("Width: %d\n", (*img).width);
@@ -71,26 +74,28 @@ PbmImage* pbm_image_load_from_stream(FILE* stream, int* error){
 #endif
 
 
-	//eliminates maximum intensity
-	fgets((*img).data, 5, stream);
+	//Reads the colordepth
+	int depth = 0;
+	fscanf(stream, "%d", &depth);
 
+
+
+	//calculates size of image data / array
+	int size = (*img).width * (*img).height + 1;
 
 	//allocate memory for storing the image
-	(*img).data = malloc((*img).width*(*img).height*sizeof(char));
+	(*img).data = malloc(size *sizeof(char));
 
+	//checks if allocating storage succeded
 	if ((*img).data == NULL){
 		*error = RET_OUT_OF_MEMORY;
 		return NULL;
 	}
 
-
+	//Removes LF-Char
+	getc(stream);
 	//Reads the img-data in binary
-	fread((*img).data, (*img).height * (*img).width, 1, stream);
-
-	// //Write values from image into array
-	// for (int i = 0; i < (*img).height*(*img).width; i++){
-	// 		fread(&(*img).data[1], sizeof(char), 1, stream);
-	// }
+	fread((*img).data, size, 1, stream);
 
 	return img;
 }
