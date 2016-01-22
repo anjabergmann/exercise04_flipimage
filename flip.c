@@ -14,12 +14,14 @@ int pbm_image_flip(PbmImage* image){
 		temp = (*image).data[i];
 		(*image).data[i] = (*image).data[arraylength -2 -i];
 		(*image).data[arraylength -2 - i] = temp;
+
 #ifdef DEBUG
 		if (i < 50){ //not really usefull with large arrays
 			printf("index: %d old value: %c new value: %c\n", i, (*image).data[i], (*image).data[arraylength - 1 - i]);
 			printf("index: %d old value: %c new value: %c\n", arraylength-1-i, (*image).data[arraylength-1-i], (*image).data[i]);
 		}
 #endif
+
 	}
 
 	return RET_PBM_OK;

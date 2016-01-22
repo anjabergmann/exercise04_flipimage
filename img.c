@@ -56,22 +56,18 @@ PbmImage* pbm_image_load_from_stream(FILE* stream, int* error){
 
 	//Reads the Comment
 	char comment [80];
-	//do {
+	do {
+		comment[0] = ' ';
 		fscanf(stream, "%[#:.0-9a-zA-Z ]", comment);
 		//Removes the LF-Char
 		getc(stream);
-	//} while (lineStartsWith#)
+	} while (comment[0] == '#');
 
 
 	//Reads the width and height
 	fscanf(stream, "%d %d", &(*img).width, &(*img).height);
 	//Removes LF-Char
 	getc(stream);
-
-#ifdef DEBUG
-	printf("Width: %d\n", (*img).width);
-	printf("Height: %d\n", (*img).height);
-#endif
 
 
 	//Reads the colordepth
@@ -108,6 +104,8 @@ int pbm_image_write_to_stream(PbmImage* img, FILE* targetStream){
 
 	//write image data into file
 	fwrite((*img).data, sizeof(char), (*img).width*(*img).height, targetStream);
+
+	fclose(targetStream);
 
 	return 0;
 }

@@ -28,11 +28,14 @@ int main(int argc, char const *argv[])
 	if (pbmimage == NULL){
 		return error;
 	}
+	fclose(f);
 
+#ifdef DEBUG
 	printf("Type: %s\n", (*pbmimage).type);
 	printf("Height: %d\n", (*pbmimage).height);
 	printf("Width: %d\n", (*pbmimage).width);
 	printf("Data: %s\n", (*pbmimage).data);
+#endif
 
 	//Flip image
 	error = pbm_image_flip(pbmimage);
@@ -49,5 +52,15 @@ int main(int argc, char const *argv[])
 	//free allocated memory
 	pbm_image_free(pbmimage);
 
-	return RET_PBM_OK;
+	if (error == RET_PBM_OK){
+		printf("\n________________________________________\n\n");
+		printf("\n Image successfully flipped. :)\n");
+		printf("\n________________________________________\n\n");
+	} else {
+		printf("\n________________________________________\n\n");
+		printf("\n An error occurred. :( %d\n", error);
+		printf("\n________________________________________\n\n");
+	}
+
+	return error;
 }
