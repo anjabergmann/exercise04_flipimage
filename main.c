@@ -22,14 +22,27 @@ int main(int argc, char const *argv[])
 
 	PbmImage* pbmimage;
 	int error = RET_PBM_OK;
+	
 	//read image data from file
 	pbmimage = pbm_image_load_from_stream(f, &error);
+	if (pbmimage == NULL){
+		return error;
+	}
 
 	//Flip image
 	error = pbm_image_flip(pbmimage);
+	if(error != 0){
+		return error;
+	}
 
 	//write image data to file
 	error = pbm_image_write_to_stream(pbmimage, out);
+	if(error != 0){
+		return error;
+	}
 
-	return 0;
+	//free allocated memory
+	pbm_image_free(pbmimage);
+
+	return RET_PBM_OK;
 }

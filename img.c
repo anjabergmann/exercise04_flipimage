@@ -4,84 +4,93 @@
 #include "img.h"
 
 void pbm_image_free(PbmImage* img){
-	free((*img).data);
-	free(img);
-} 
+	if ((*img).data != NULL){
+		free((*img).data);
+	}
+	if(img != NULL){
+		free(img);
+	} 
+}
 
 PbmImage* pbm_image_load_from_stream(FILE* stream, int* error){
 	
+	//Allocate memory to save the image
 	PbmImage* img = malloc(sizeof(PbmImage));
+	if (img == NULL){
+		*error = RET_OUT_OF_MEMORY;
+		return NULL;
+	}
 
+	//Check if file is empty / doesn't exist
 	if (stream == NULL){
 		printf("File is empty\n");
 		fclose(stream);
+		*error = RET_EOF;
 		return NULL;
 	} 
 
-	printf("File successfully read\n");
+	printf("File successfully read.\n");
+	printf("Checking format (has to be P5 PGM Image).\n");
 
-
-	fgets((*img).type, 4, stream); //first line of img-file
 
 	//check if format is P5
-	if (!strcmp((*img).type, PBM_TYPE_P5)){
-		printf("Unsupported format");
-		*error = RET_UNSUPPORTED_FILE_FORMAT;
+	fscanf(stream, "%[0-9a-zA-Z]", (*img).type);
+
+#ifdef DEBUG
+	printf("[DEBUG] Image type: %s\n", (*img).type);
+#endif
+
+	if (strcmp((*img).type, PBM_TYPE_P5) != 0){
+		printf("Unsupported format.\n");
+		*error = RET_INVALID_FORMAT;
 		return NULL;
+	} else {
+		printf("Format okay.\n");
 	}
 
-	int linelength = 255;
-	char data[linelength];
-	data[0] = '#';
-	while (data[0] == '#'){
-		fgets(data, linelength, stream);
-	}
+	//Removes LF-Char
+	getc(stream);
 
-	int i = 0;
-	char widthString[4];
-	while (data[i] != ' ') {
-		widthString[i] = data[i];
-		i++;
-	}
+	//Reads the Comment
+	char comment [80];
+	fscanf(stream, "%[#:.0-9a-zA-Z ]", comment);
+	//Removes the LF-Char
+	getc(stream);
 
-	i++;
-	int j = 0;
-	char heightString[4];
-	while(data[i] != 0){
-		heightString[j] = data[i];
-		i++;
-		j++;
-	}
+	//Reads the width and height
+	fscanf(stream, "%d %d", &(*img).width, &(*img).height);
+
+	//Reads the colordepth
+	int depth = 0;
+	fscanf(stream, "%d", &depth);
 
 
-	int width = atoi(widthString);
-	int height = atoi(heightString);
-
-	printf("%d\n", width);
-	printf("%d", height);
-
-
-	(*img).width = width;
-	(*img).height = height;
+#ifdef DEBUG
+	printf("Width: %d\n", (*img).width);
+	printf("Height: %d\n", (*img).height);
+#endif
 
 
-	//eliminate maximum intensity
-	fgets(data, 5, stream);
+	//eliminates maximum intensity
+	fgets((*img).data, 5, stream);
 
 
 	//allocate memory for storing the image
-	(*img).data = malloc(width*height*sizeof(char));
+	(*img).data = malloc((*img).width*(*img).height*sizeof(char));
 
-
-	//Write values from image into array
-	char temp = ' ';
-	for (i = 0; i < height*width; i++){
-			fread(&temp, sizeof(char), 1, stream);
-			(*img).data[i] = temp;
-#ifdef DEBUG
-			printf("i: %d temp: %c\n", i, temp);
-#endif
+	if ((*img).data == NULL){
+		*error = RET_OUT_OF_MEMORY;
+		return NULL;
 	}
+
+
+	//Reads the img-data in binary
+	fread((*img).data, (*img).height * (*img).width, 1, stream);
+
+	// //Write values from image into array
+	// for (int i = 0; i < (*img).height*(*img).width; i++){
+	// 		fread(&(*img).data[1], sizeof(char), 1, stream);
+	// }
 
 	return img;
 }
@@ -90,7 +99,7 @@ PbmImage* pbm_image_load_from_stream(FILE* stream, int* error){
 int pbm_image_write_to_stream(PbmImage* img, FILE* targetStream){
 
 	//write image header into file
-	fprintf(targetStream, "%s%d %d\n255\n", (*img).type, (*img).width, (*img).height);
+	fprintf(targetStream, "%s\n%d %d\n255\n", (*img).type, (*img).width, (*img).height);
 
 	//write image data into file
 	fwrite((*img).data, sizeof(char), (*img).width*(*img).height, targetStream);
